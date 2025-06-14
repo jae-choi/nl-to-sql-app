@@ -3,42 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자연어 → BigQuery SQL 생성기</title>
+    <title>고급 자연어 → BigQuery SQL 생성기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>💬 자연어 → BigQuery SQL 생성기</h1>
-        <hr>
+    <aside id="debug-sidebar">
+        <h2>디버깅 정보</h2>
+        <div class="debug-item">
+            <strong>정제된 질문:</strong>
+            <p id="debug-refined-query">N/A</p>
+        </div>
+        <div class="debug-item">
+            <strong>생성된 SQL:</strong>
+            <pre id="debug-generated-sql">N/A</pre>
+        </div>
+        <div class="debug-item">
+            <strong>유사성 판단:</strong>
+            <p id="debug-similarity-check">N/A</p>
+        </div>
+    </aside>
 
-        <div class="step-container" id="step1">
-            <h2>단계 1: 자연어 질문 입력</h2>
-            <textarea id="nl-input" placeholder="예: 지난 달 가장 많이 팔린 상품 상위 5개는?"></textarea>
-            <button id="refine-btn">질문 정제하기</button>
-            <div id="step1-result" class="result-box" style="display:none;">
+    <main id="main-content">
+        <div class="container">
+            <header>
+                <h1>💬 자연어 → BigQuery SQL 생성기</h1>
+            </header>
+            
+            <section class="step-card" id="step1">
+                <h2>단계 1: 자연어 질문 입력</h2>
+                <textarea id="nl-input" placeholder="예: 지난 달 가장 많이 팔린 상품 상위 5개는?"></textarea>
+                <div class="button-group">
+                    <button id="refine-btn" class="primary">질문 정제하기</button>
+                </div>
+            </section>
+
+            <section class="step-card" id="step2" style="display:none;">
+                <h2>단계 2: 질문 확인</h2>
                 <p><strong>✏️ 다듬어진 질문:</strong></p>
                 <div id="refined-query" class="info-box"></div>
                 <p>이 질문으로 SQL 생성을 진행할까요?</p>
-                <button id="generate-sql-btn">예, 진행합니다</button>
-            </div>
-        </div>
+                <div class="button-group">
+                    <button id="generate-sql-btn" class="primary">예, 진행합니다</button>
+                    <button id="cancel-refine-btn" class="secondary">아니오, 다시 입력합니다</button>
+                </div>
+            </section>
 
-        <div class="step-container" id="step2" style="display:none;">
-            <h2>단계 2: SQL 생성 및 검증</h2>
-            <p><strong>🔎 생성된 SQL:</strong></p>
-            <pre id="generated-sql" class="code-box"></pre>
-            <div id="sql-status" class="info-box"></div>
-            <p>이 SQL을 BigQuery에서 실행하시겠습니까?</p>
-            <button id="run-sql-btn">예, 실행합니다</button>
+            <section class="step-card" id="step3" style="display:none;">
+                <h2>단계 3: SQL 확인 및 실행</h2>
+                <p><strong>🔎 생성된 SQL:</strong></p>
+                <pre id="generated-sql" class="code-box"></pre>
+                <div id="sql-status" class="info-box"></div>
+                <p>이 SQL을 BigQuery에서 실행하시겠습니까?</p>
+                <div class="button-group">
+                    <button id="run-sql-btn" class="primary">예, 실행합니다</button>
+                    <button id="cancel-sql-btn" class="secondary">아니오, 취소합니다</button>
+                </div>
+            </section>
+            
+            <section class="step-card" id="step4" style="display:none;">
+                <h2>단계 4: 실행 결과</h2>
+                <div id="query-result-table" class="result-box"></div>
+                <div id="query-result-chart" class="result-box"></div>
+            </section>
         </div>
-        
-        <div class="step-container" id="step3" style="display:none;">
-            <h2>단계 3: 실행 결과</h2>
-            <div id="query-result" class="result-box"></div>
-        </div>
+    </main>
 
-        <div id="spinner" class="spinner" style="display:none;"></div>
+    <div id="loading-overlay" style="display:none;">
+        <div class="spinner"></div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
