@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자연어 → BigQuery SQL 생성기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>💬 자연어 → BigQuery SQL 생성기</h1>
+        <hr>
+
+        <div class="step-container" id="step1">
+            <h2>단계 1: 자연어 질문 입력</h2>
+            <textarea id="nl-input" placeholder="예: 지난 달 가장 많이 팔린 상품 상위 5개는?"></textarea>
+            <button id="refine-btn">질문 정제하기</button>
+            <div id="step1-result" class="result-box" style="display:none;">
+                <p><strong>✏️ 다듬어진 질문:</strong></p>
+                <div id="refined-query" class="info-box"></div>
+                <p>이 질문으로 SQL 생성을 진행할까요?</p>
+                <button id="generate-sql-btn">예, 진행합니다</button>
+            </div>
+        </div>
+
+        <div class="step-container" id="step2" style="display:none;">
+            <h2>단계 2: SQL 생성 및 검증</h2>
+            <p><strong>🔎 생성된 SQL:</strong></p>
+            <pre id="generated-sql" class="code-box"></pre>
+            <div id="sql-status" class="info-box"></div>
+            <p>이 SQL을 BigQuery에서 실행하시겠습니까?</p>
+            <button id="run-sql-btn">예, 실행합니다</button>
+        </div>
+        
+        <div class="step-container" id="step3" style="display:none;">
+            <h2>단계 3: 실행 결과</h2>
+            <div id="query-result" class="result-box"></div>
+        </div>
+
+        <div id="spinner" class="spinner" style="display:none;"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
