@@ -3,81 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>고급 자연어 → BigQuery SQL 생성기</title>
+    <title>NL2SQL</title>
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- highlight.js (Syntax Highlighting) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+
+    <!-- Lucide Icons (New) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Vega-Embed (for charts) -->
     <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <aside id="debug-sidebar">
-        <h2>디버깅 정보</h2>
-        <div class="debug-item">
-            <strong>정제된 질문:</strong>
-            <p id="debug-refined-query">N/A</p>
-        </div>
-        <div class="debug-item">
-            <strong>생성된 SQL:</strong>
-            <pre id="debug-generated-sql">N/A</pre>
-        </div>
-        <div class="debug-item">
-            <strong>유사성 판단:</strong>
-            <p id="debug-similarity-check">N/A</p>
-        </div>
-    </aside>
+    <div class="app-layout">
+        <!-- 사이드바 토글 버튼 -->
+        <button id="sidebar-toggle-btn" aria-label="사이드바 토글">
+            <i data-lucide="menu"></i>
+        </button>
 
-    <main id="main-content">
-        <div class="container">
+        <!-- 디버깅 사이드바 -->
+        <aside id="debug-sidebar">
+            <div class="sidebar-header">
+                <h2>디버깅 정보</h2>
+            </div>
+            <div class="sidebar-content">
+                <div class="debug-item">
+                    <strong>정제된 질문:</strong>
+                    <p id="debug-refined-query">N/A</p>
+                </div>
+                <div class="debug-item">
+                    <strong>생성된 SQL:</strong>
+                    <div class="code-container-debug">
+                        <pre><code class="language-sql" id="debug-generated-sql">N/A</code></pre>
+                        <button class="copy-btn-debug" aria-label="디버그 SQL 복사">
+                            <i data-lucide="copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="debug-item">
+                    <strong>유사성 판단:</strong>
+                    <p id="debug-similarity-check">N/A</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <div id="main-container">
             <header>
-                <h1>💬 자연어 → BigQuery SQL 생성기</h1>
+                <h1>NL2SQL</h1>
+                <p>자연어 질문으로 SQL 생성, 검증, 실행 및 시각화</p>
             </header>
-            
-            <section class="step-card" id="step1">
-                <h2>단계 1: 자연어 질문 입력</h2>
-                <textarea id="nl-input" placeholder="예: 지난 달 가장 많이 팔린 상품 상위 5개는?"></textarea>
-                <div class="button-group">
-                    <button id="refine-btn" class="primary">질문 정제하기</button>
-                </div>
-            </section>
 
-            <section class="step-card" id="step2" style="display:none;">
-                <h2>단계 2: 질문 확인</h2>
-                <p><strong>✏️ 다듬어진 질문:</strong></p>
-                <div id="refined-query" class="info-box"></div>
-                <p>이 질문으로 SQL 생성을 진행할까요?</p>
-                <div class="button-group">
-                    <button id="generate-sql-btn" class="primary">예, 진행합니다</button>
-                    <button id="cancel-refine-btn" class="secondary">아니오, 다시 입력합니다</button>
-                </div>
-            </section>
+            <main id="chat-feed"></main>
 
-            <section class="step-card" id="step3" style="display:none;">
-                <h2>단계 3: SQL 확인 및 실행</h2>
-                <p><strong>🔎 생성된 SQL:</strong></p>
-                <pre id="generated-sql" class="code-box"></pre>
-                <div id="sql-status" class="info-box"></div>
-                <p>이 SQL을 BigQuery에서 실행하시겠습니까?</p>
-                <div class="button-group">
-                    <button id="run-sql-btn" class="primary">예, 실행합니다</button>
-                    <button id="cancel-sql-btn" class="secondary">아니오, 취소합니다</button>
+            <footer id="input-area">
+                <div class="input-wrapper">
+                    <textarea id="nl-input" placeholder="자연어 질문을 입력하세요..." rows="1"></textarea>
+                    <button id="send-btn" aria-label="전송">
+                        <i data-lucide="send"></i>
+                    </button>
                 </div>
-            </section>
-            
-            <section class="step-card" id="step4" style="display:none;">
-                <h2>단계 4: 실행 결과</h2>
-                <div id="query-result-table" class="result-box"></div>
-                <div id="query-result-chart" class="result-box"></div>
-            </section>
+            </footer>
         </div>
-    </main>
-
-    <div id="loading-overlay" style="display:none;">
-        <div class="spinner"></div>
+        
+        <!-- 결과 표시 패널 -->
+        <section id="results-wrapper" class="collapsed">
+            <div id="results-header">
+                <h3><i data-lucide="pie-chart"></i> 쿼리 실행 결과</h3>
+                <div class="chart-controls">
+                    <label for="chart-type-select">차트 유형:</label>
+                    <select id="chart-type-select">
+                        <option value="auto" selected>자동</option>
+                        <option value="line">선 차트</option>
+                        <option value="bar">막대 차트</option>
+                        <option value="scatter">산점도</option>
+                        <option value="pie">파이 차트</option>
+                        <option value="table">테이블</option>
+                    </select>
+                </div>
+                <button id="toggle-results-btn" aria-label="결과 창 토글">
+                    <i data-lucide="chevron-up"></i>
+                </button>
+            </div>
+            <div id="results-display">
+                <!-- 결과 내용이 여기에 삽입됩니다 -->
+            </div>
+        </section>
     </div>
 
+    <!-- 로딩 인디케이터 템플릿 -->
+    <template id="loading-template">
+        <div class="chat-message bot-message">
+            <div class="message-content">
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+    </template>
+    
     <script src="script.js"></script>
 </body>
 </html>
